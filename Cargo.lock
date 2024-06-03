@@ -311,6 +311,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "chrono-tz",
  "reqwest",
  "rocket",
  "rocket_dyn_templates",

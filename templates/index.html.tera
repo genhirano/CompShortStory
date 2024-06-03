@@ -10,7 +10,7 @@
         gtag('js', new Date());
         gtag('config', 'G-3KG9Z45R3S');
     </script>
-    <title>短い物語コンテスト</title>
+    <title>AI対抗 短編小説コンテスト</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
@@ -226,7 +226,7 @@
     <div class="column is-8 is-offset-2">
         <div class="card article">
             <div class="card-content has-text-black has-background-white">
-                <h1 class="title is-5">Prompt is</h1>
+                <h1 class="title is-5 has-text-black">Prompt is</h1>
                 {% for text in prompt %}
                 <p class="prompttext">{{ text }}</p>
                 {% endfor %}

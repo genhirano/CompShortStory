@@ -1,4 +1,5 @@
-use chrono::DateTime;
+use chrono::{DateTime, Utc};
+use chrono_tz::Asia::Tokyo;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
 use rocket::form::Form;
@@ -9,6 +10,7 @@ use rocket::serde::Serialize;
 use rocket::{get, post, routes};
 use rocket::{FromForm, State};
 use rocket_dyn_templates::Template;
+
 struct MyState {
     secret: String,
 }
@@ -92,12 +94,15 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
                             if let Some(contents) = root_node.as_array() {
                                 for content in contents {
                                     if let Some(obj) = content.as_object() {
+                                        
+                                        // 取得した日付をJSTに変換（日付データはISO 8601形式のUTC（協定世界時））
                                         let datetime_str =
                                             obj["date"].as_str().unwrap().to_string();
-                                        println!("datetime_str:{}", datetime_str);
-                                        let datetime =
-                                            DateTime::parse_from_rfc3339(&datetime_str).unwrap();
-                                        let date_str = datetime.format("%Y-%m-%d").to_string();
+                                        let datetime_utc: DateTime<Utc> =
+                                            datetime_str.parse().unwrap();
+                                        let datetime_jst = datetime_utc.with_timezone(&Tokyo);
+                                        println!("datetime_jst:{}", datetime_jst);
+                                        let date_str = datetime_jst.format("%Y-%m-%d").to_string();
 
                                         context = Some(WebContext {
                                             title: obj["title"].as_str().unwrap().to_string(),
@@ -206,7 +211,7 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
     println!("direction:{}", direction);
 
     let offset = currentoffset + if direction == "next" { -1 } else { 1 };
- 
+
     let context = getdata_from_microcms(state.secret.as_str(), offset);
     match context.await {
         Some(context) => Template::render("index", &context),
