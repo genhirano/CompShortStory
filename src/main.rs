@@ -32,7 +32,7 @@ struct JsonContent {
 #[derive(Serialize)]
 struct WebContext {
     title: String,
-    version : String,
+    version: String,
     chatgpt: Vec<String>,
     claude: Vec<String>,
     gemini: Vec<String>,
@@ -87,20 +87,17 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
                         let has_prev = (totalcount - offset) > 1;
                         let has_next = offset > 0;
 
-
-
-
                         let root_node = obj.get("contents");
                         if let Some(root_node) = root_node {
                             if let Some(contents) = root_node.as_array() {
                                 for content in contents {
                                     if let Some(obj) = content.as_object() {
-
-                                        let datetime_str = obj["date"].as_str().unwrap().to_string();
+                                        let datetime_str =
+                                            obj["date"].as_str().unwrap().to_string();
                                         println!("datetime_str:{}", datetime_str);
-                                        let datetime = DateTime::parse_from_rfc3339(&datetime_str).unwrap();
+                                        let datetime =
+                                            DateTime::parse_from_rfc3339(&datetime_str).unwrap();
                                         let date_str = datetime.format("%Y-%m-%d").to_string();
-                
 
                                         context = Some(WebContext {
                                             title: obj["title"].as_str().unwrap().to_string(),
@@ -202,23 +199,15 @@ struct PostData {
 
 #[post("/", data = "<arg>")]
 async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
-    let direction = &arg.direction ;
-    let currentoffset = &arg.currentoffset ;
+    let direction = &arg.direction;
+    let currentoffset = &arg.currentoffset;
 
     println!("currentoffset:{}", currentoffset);
     println!("direction:{}", direction);
 
-    let mut directionint: i64 = 0;
-    if direction == "next" {
-        directionint = -1;
-    } else {
-        directionint = 1;
-    }
-    let ofset = currentoffset + directionint;
-    println!("nextoffset:{}", &ofset);
-
-
-    let context = getdata_from_microcms(state.secret.as_str(), ofset);
+    let offset = currentoffset + if direction == "next" { -1 } else { 1 };
+ 
+    let context = getdata_from_microcms(state.secret.as_str(), offset);
     match context.await {
         Some(context) => Template::render("index", &context),
         None => panic!("パニック3"),
