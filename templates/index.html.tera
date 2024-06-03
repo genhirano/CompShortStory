@@ -23,6 +23,7 @@
         }
 
         .say {
+            font-size: 1.2em;
             display: table;
             overflow: hidden;
             width: 100%;
@@ -30,7 +31,6 @@
         }
         .prompttext {
             font-size: 0.8em;
-
         }
 
         .faceicon {
