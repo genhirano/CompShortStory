@@ -1,4 +1,4 @@
-use anyhow::Context;
+use chrono::DateTime;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
 use rocket::form::Form;
@@ -9,7 +9,6 @@ use rocket::serde::Serialize;
 use rocket::{get, post, routes};
 use rocket::{FromForm, State};
 use rocket_dyn_templates::Template;
-use shuttle_runtime::SecretStore;
 struct MyState {
     secret: String,
 }
@@ -33,6 +32,7 @@ struct JsonContent {
 #[derive(Serialize)]
 struct WebContext {
     title: String,
+    version : String,
     chatgpt: Vec<String>,
     claude: Vec<String>,
     gemini: Vec<String>,
@@ -50,8 +50,6 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
         "https://wa4vehv99r.microcms.io/api/v1/aitext?limit=1&orders=-date&offset={}",
         offset
     );
-
-    println!("{}", endpoint);
 
     // APIキーをヘッダーに設定
     let mut headers = HeaderMap::new();
@@ -88,45 +86,84 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
 
                         let has_prev = (totalcount - offset) > 1;
                         let has_next = offset > 0;
-                        //println!("has_prev:{},{},{},{}", offset, totalcount, has_prev, has_next);
-                        //println!("t - o:{},{}", totalcount - offset, has_prev);
+
+
+
 
                         let root_node = obj.get("contents");
                         if let Some(root_node) = root_node {
                             if let Some(contents) = root_node.as_array() {
                                 for content in contents {
                                     if let Some(obj) = content.as_object() {
+
+                                        let datetime_str = obj["date"].as_str().unwrap().to_string();
+                                        println!("datetime_str:{}", datetime_str);
+                                        let datetime = DateTime::parse_from_rfc3339(&datetime_str).unwrap();
+                                        let date_str = datetime.format("%Y-%m-%d").to_string();
+                
+
                                         context = Some(WebContext {
                                             title: obj["title"].as_str().unwrap().to_string(),
+                                            version: date_str.to_string(),
                                             chatgpt: obj["ChatGPT"]
                                                 .as_str()
                                                 .unwrap()
                                                 .split('\n')
-                                                .map(|s| s.to_string())
+                                                .map(|s| {
+                                                    if s.is_empty() {
+                                                        "　".to_string()
+                                                    } else {
+                                                        s.to_string()
+                                                    }
+                                                })
                                                 .collect(),
                                             claude: obj["Claude"]
                                                 .as_str()
                                                 .unwrap()
                                                 .split('\n')
-                                                .map(|s| s.to_string())
+                                                .map(|s| {
+                                                    if s.is_empty() {
+                                                        "　".to_string()
+                                                    } else {
+                                                        s.to_string()
+                                                    }
+                                                })
                                                 .collect(),
                                             gemini: obj["Gemini"]
                                                 .as_str()
                                                 .unwrap()
                                                 .split('\n')
-                                                .map(|s| s.to_string())
+                                                .map(|s| {
+                                                    if s.is_empty() {
+                                                        "　".to_string()
+                                                    } else {
+                                                        s.to_string()
+                                                    }
+                                                })
                                                 .collect(),
                                             copilot: obj["Copilot"]
                                                 .as_str()
                                                 .unwrap()
                                                 .split('\n')
-                                                .map(|s| s.to_string())
+                                                .map(|s| {
+                                                    if s.is_empty() {
+                                                        "　".to_string()
+                                                    } else {
+                                                        s.to_string()
+                                                    }
+                                                })
                                                 .collect(),
                                             prompt: obj["prompt"]
                                                 .as_str()
                                                 .unwrap()
                                                 .split('\n')
-                                                .map(|s| s.to_string())
+                                                .map(|s| {
+                                                    if s.is_empty() {
+                                                        "　".to_string()
+                                                    } else {
+                                                        s.to_string()
+                                                    }
+                                                })
                                                 .collect(),
                                             totalcount: totalcount,
                                             offset: offset,
@@ -189,11 +226,12 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
 }
 
 #[shuttle_runtime::main]
-async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
+async fn main() -> shuttle_rocket::ShuttleRocket {
     // memo
     // cargo shuttle resource delete secrets  ※Deploy済みのシークレットをShuttleから全部削除
 
-    let secret = secrets.get("secret_key").context("secret was not found")?;
+    //let secret = secrets.get("secret_key").context("secret was not found")?;
+    let secret = "pfcBd8oLiiBW240e7I9IDjy6jWXHkaLE2Qx2".to_string();
 
     let state = MyState { secret };
 

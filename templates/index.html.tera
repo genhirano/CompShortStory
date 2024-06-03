@@ -2,6 +2,16 @@
 <html lang="ja">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KG9Z45R3S"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-3KG9Z45R3S');
+    </script>
+
     <title>短い物語コンテスト</title>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
@@ -9,16 +19,10 @@
     <meta name="viewport" content="width=device-width">
 
     <style>
-        .text {
-            text-indent: 0.5em;
-            font-size: 20px;
-        }
-
-        section {
+        .contentsection {
             width: 100%;
             margin: 1.0em 0;
         }
-
 
         .say {
             display: table;
@@ -61,7 +65,9 @@
 
         .sc {
             display: inline-block;
+            text-indent: 1em;
             text-align: left;
+            min-height: 1em;
             padding: 10px;
             border: solid 2px #d5d5d5;
             border-radius: 12px;
@@ -93,24 +99,27 @@
 </head>
 
 <body class="has-background-white-ter">
-    <section style="background-color:#19a974;" class="hero is-small">
+    <section style="background-color:lightslategray;" class="hero is-small">
         <div class="hero-body">
             <div style="width:450px" class="container has-text-centered ">
-                <p class="title has-text-white is-3">Short Story Contest</p>
-                <p class="subtitle has-text-white  is-6">あなたの好きな超短編小説は？</p>
+                <p class="title has-text-white is-3">Micro Story AI Contest</p>
+                <p class="subtitle has-text-white  is-6">AI対抗短編小説コンテスト!</p>
 
                 <form action="/" method="post">
                     <div class="columns is-mobile is-centered">
                         <div class="column is-one-quarter">
                             {% if has_prev %}
-                            <button name="direction" value="prev" class="button has-text-left is-responsive">＜＜ 前へ</button>
+                            <button name="direction" value="prev" class="button has-text-left is-responsive">＜＜
+                                前へ</button>
                             {% endif %}
                         </div>
-                        <div class="column is-one-quarter"></div>
-                        <div class="column is-one-quarter"></div>
+                        <div class="column is-one-half has-text-white">
+                            (ほぼ)毎日更新！
+                        </div>
                         <div class="column is-one-quarter">
                             {% if has_next %}
-                            <button name="direction" value="next" class="button has-text-right is-responsive">＞＞次へ</button>
+                            <button name="direction" value="next"
+                                class="button has-text-right is-responsive">＞＞次へ</button>
                             {% endif %}
                         </div>
                     </div>
@@ -121,13 +130,14 @@
         </div>
     </section>
 
-    <section>
+    <section class="contentsection">
         <div style="width:450px" class="has-text-black container has-text-centered box has-background-white">
-            <h1 class="title is-5 has-text-black">{{ title }}</h1>
+            <p class="has-text-black">{{ version }}</p>
+            <h1 class="title is-4 has-text-black">{{ title }}</h1>
         </div>
     </section>
 
-    <section>
+    <section class="contentsection">
         <div style="width:450px" class="has-text-black container has-text-centered box has-background-white">
             <div class="say left">
                 <p class="faceicon"><img decoding="async" src="/chatGPT.png">
@@ -144,7 +154,7 @@
         </div>
     </section>
 
-    <section>
+    <section class="contentsection">
         <div style="width:450px" class="has-text-black container has-text-centered box has-background-white">
             <div class="say left">
                 <p class="faceicon"><img decoding="async" src="/Claude.gif"><span
@@ -160,7 +170,7 @@
         </div>
     </section>
 
-    <section>
+    <section class="contentsection">
         <div style="width:450px" class="has-text-black container has-text-centered box has-background-white">
             <div class="say left">
                 <p class="faceicon"><img decoding="async" src="/Gemini.png"><span
@@ -176,7 +186,7 @@
         </div>
     </section>
 
-    <section>
+    <section class="contentsection">
         <div style="width:450px" class="has-text-black container has-text-centered box has-background-white">
             <div class="say left">
                 <p class="faceicon"><img decoding="async" src="/bing_copilot.png"><span
@@ -193,8 +203,8 @@
         </div>
     </section>
 
-    <section>
-        <div style="width:450px" class="has-text-black container has-text-centered box has-background-white">
+    <section class="contentsection">
+        <div style="width:450px" class="has-text-black container box has-background-white">
             <h1 class="title is-5">Prompt is</h1>
             {% for text in prompt %}
             <p class="text">{{ text }}</p>
@@ -202,23 +212,12 @@
         </div>
     </section>
 
-
-
-
-
-    <footer style="background-color:#19a974;" class="footer has-text-white">
+    <footer style="background-color:lightslategray;" class="footer has-text-white">
         <p class="has-text-centered has-text-weight-semibold">
             hosted by <a href="https://www.shuttle.rs/" target="_blank">"Shuttle"</a> and written in the <a
                 href="https://www.rust-lang.org/" target="_blank">"Rust"</a>.
         </p>
         <br>
-        <p class="has-text-centered">
-            <a class="button is-black" href="https://github.com/genhirano/PiSearch_Shuttle" target="_blank">
-                project github : <span class="icon"><i class="fab fa-github"></i></span>
-            </a>
-        </p>
-        <br>
-
         <p class="has-text-centered">
             Copyright © 2022-2024 genhirano
         </p>
