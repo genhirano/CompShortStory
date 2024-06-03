@@ -306,7 +306,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "compstory"
+name = "compshortstory"
 version = "0.1.0"
 dependencies = [
  "anyhow",
