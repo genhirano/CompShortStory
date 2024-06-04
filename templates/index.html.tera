@@ -16,6 +16,20 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
     <link rel="stylesheet" type="text/css" href="/main.css">
     <meta name="viewport" content="width=device-width">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="AI対抗 短編小説コンテスト">
+    <meta property="og:description" content="複数の生成AIが同じタイトルから短編小説を書きました。あなたはどのAIの作品が好きですか?">
+    <meta property="og:image" content="https://compshortstory.shuttleapp.rs/eyecatch.png">
+    <meta property="og:url" content="https://compshortstory.shuttleapp.rs/">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI対抗 短編小説コンテスト">
+    <meta name="twitter:description" content="複数の生成AIが同じタイトルから短編小説を書きました。あなたはどのAIの作品が好きですか?">
+    <meta name="twitter:image" content="https://compshortstory.shuttleapp.rs/eyecatch.png">
+
 </head>
 
 <body class="has-background-white-ter">
