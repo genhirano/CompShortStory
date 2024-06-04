@@ -14,90 +14,8 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+    <link rel="stylesheet" type="text/css" href="/main.css">
     <meta name="viewport" content="width=device-width">
-
-    <style>
-        .contentsection {
-            width: 100%;
-            margin: 1.0em 0;
-        }
-
-        .say {
-            font-size: 1.2em;
-            display: table;
-            overflow: hidden;
-            width: 100%;
-            margin: 1.5em 0;
-        }
-
-        .prompttext {
-            font-size: 0.8em;
-        }
-
-        .faceicon {
-            display: table-cell;
-            width: 80px;
-            padding-right: 20px;
-            text-align: center;
-            vertical-align: top;
-        }
-
-        .faceicon img {
-            width: 500%;
-            height: auto;
-            border: solid 3px #eaedf2;
-            border-radius: 18%;
-        }
-
-        .faceicon span {
-            font-size: 11px;
-            font-weight: 700;
-            margin-top: 8px;
-            line-height: 1.4;
-            display: block;
-        }
-
-
-        .chatting {
-            display: table-cell;
-            position: relative;
-            font-size: .95em;
-            vertical-align: top;
-        }
-
-        .sc {
-            display: inline-block;
-            text-indent: 1em;
-            text-align: left;
-            min-height: 1em;
-            padding: 10px;
-            border: solid 2px #d5d5d5;
-            border-radius: 12px;
-            background: #fff;
-            word-break: break-word;
-            width: 100%;
-        }
-
-        .sc:before {
-            display: inline-block;
-            position: absolute;
-            top: 18px;
-            left: -23px;
-            border: 12px solid transparent;
-            border-right: 12px solid #d5d5d5;
-            content: "";
-        }
-
-        .sc:after {
-            display: inline-block;
-            position: absolute;
-            top: 18px;
-            left: -20px;
-            border: 12px solid transparent;
-            border-right: 12px solid #fff;
-            content: "";
-        }
-    </style>
 </head>
 
 <body class="has-background-white-ter">
@@ -107,7 +25,6 @@
             <div style="width:450px" class="container has-text-centered ">
                 <p class="title has-text-white is-3">AI Short Story Contest</p>
                 <p class="subtitle has-text-white  is-6">AI対抗 短編小説コンテスト!</p>
-
 
                 <form id="moveform" action="/" method="post">
                     <div class="columns is-mobile is-centered">
@@ -145,7 +62,6 @@
             </div>
         </div>
     </section>
-
 
     <div class="column is-8 is-offset-2">
         <div class="card article">
@@ -263,11 +179,9 @@
     </footer>
 
     <script>
-
         document.addEventListener('DOMContentLoaded', function () {
-
             const form = document.getElementById('moveform');
-        
+
             form.addEventListener('click', function (event) {
                 let target = event.target;
                 while (target !== form && target.type !== 'submit') {
@@ -281,32 +195,26 @@
                     form.appendChild(hiddenInput);
                 }
             });
-        
+
             form.addEventListener('submit', function (event) {
-        
-                // フォーム送信をキャンセル
                 event.preventDefault();
-        
                 const repaint = async () => {
                     for (let i = 0; i < 2; i++) {
                         await new Promise(resolve => requestAnimationFrame(resolve));
                     }
                 };
-        
+
                 (async () => {
                     document.getElementById('loading').style.display = 'inline'; // ローディング画像を表示
                     await repaint(); // 画面を再描画して待つ
                     form.removeEventListener('submit', arguments.callee);
                     form.submit();
                 })();
-        
+
             });
         });
 
-
     </script>
-
-
 
 </body>
 

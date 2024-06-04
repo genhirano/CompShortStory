@@ -1,0 +1,82 @@
+<style>
+.contentsection {
+    width: 100%;
+    margin: 1.0em 0;
+}
+
+.say {
+    font-size: 1.2em;
+    display: table;
+    overflow: hidden;
+    width: 100%;
+    margin: 1.5em 0;
+}
+
+.prompttext {
+    font-size: 0.8em;
+}
+
+.faceicon {
+    display: table-cell;
+    width: 80px;
+    padding-right: 20px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.faceicon img {
+    width: 500%;
+    height: auto;
+    border: solid 3px #eaedf2;
+    border-radius: 18%;
+}
+
+.faceicon span {
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 8px;
+    line-height: 1.4;
+    display: block;
+}
+
+
+.chatting {
+    display: table-cell;
+    position: relative;
+    font-size: .95em;
+    vertical-align: top;
+}
+
+.sc {
+    display: inline-block;
+    text-indent: 1em;
+    text-align: left;
+    min-height: 1em;
+    padding: 10px;
+    border: solid 2px #d5d5d5;
+    border-radius: 12px;
+    background: #fff;
+    word-break: break-word;
+    width: 100%;
+}
+
+.sc:before {
+    display: inline-block;
+    position: absolute;
+    top: 18px;
+    left: -23px;
+    border: 12px solid transparent;
+    border-right: 12px solid #d5d5d5;
+    content: "";
+}
+
+.sc:after {
+    display: inline-block;
+    position: absolute;
+    top: 18px;
+    left: -20px;
+    border: 12px solid transparent;
+    border-right: 12px solid #fff;
+    content: "";
+}
+</style>
