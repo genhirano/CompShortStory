@@ -161,7 +161,9 @@
             hosted by <a href="https://www.shuttle.rs/" target="_blank">"Shuttle"</a> and written in the <a
                 href="https://www.rust-lang.org/" target="_blank">"Rust"</a>.
         </p>
-        <br>
+        <p class="has-text-centered">
+            <img src="http://www.rays-counter.com/d1282_f10_002/665ecae192f43/">
+        </p>
         <p class="has-text-centered">
             Copyright © 2022-2024 genhirano
         </p>
@@ -176,6 +178,8 @@
                 contact : <span class="icon"><i class="fab fa-github"></i></span>
             </a>
         </p>
+
+
     </footer>
 
     <script>
