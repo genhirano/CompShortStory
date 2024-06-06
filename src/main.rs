@@ -5,7 +5,6 @@ use reqwest::Client;
 use rocket::form::Form;
 use rocket::fs::{relative, FileServer};
 use rocket::serde::json::serde_json;
-use rocket::serde::Deserialize;
 use rocket::serde::Serialize;
 use rocket::{get, post, routes};
 use rocket::{FromForm, State};
@@ -14,22 +13,6 @@ use serde_json::Value;
 
 struct MyState {
     secret: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct JsonContent {
-    id: String,
-    created_at: String,
-    updated_at: String,
-    published_at: String,
-    revised_at: String,
-    date: String,
-    title: String,
-    prompt: String,
-    chat_gpt: String,
-    claude: String,
-    gemini: String,
-    copilot: String,
 }
 
 #[derive(Serialize)]
@@ -72,113 +55,36 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
             match resp.json::<serde_json::Value>().await {
                 Ok(content) => {
                     if let Some(obj) = content.as_object() {
-                        let totalcount = obj.get("totalCount");
-                        let totalcount = match totalcount {
-                            Some(totalcount) => totalcount.as_i64().unwrap(),
-                            None => {
-                                panic!("totalcountが取得できませんでした");
-                            }
-                        };
-                        let offset = obj.get("offset");
-                        let offset = match offset {
-                            Some(offset) => offset.as_i64().unwrap(),
-                            None => {
-                                panic!("offsetが取得できませんでした");
-                            }
-                        };
+                        
+                        //登録済みの全件数とオフセットを取得
+                        let totalcount = obj.get("totalCount").unwrap().as_i64().unwrap();
+                        let offset = obj.get("offset").unwrap().as_i64().unwrap();
 
                         let has_prev = (totalcount - offset) > 1;
                         let has_next = offset > 0;
 
-                        let root_node = obj.get("contents");
-                        
-                        
-                        if let Some(root_node) = root_node {
-   
-                            if let Some(contents) = root_node.as_array() {
-                                for content in contents {
-                                    if let Some(obj) = content.as_object() {
-                                        
-                                        // 取得した日付をJSTに変換（日付データはISO 8601形式のUTC（協定世界時））
-                                        let datetime_str =
-                                            obj["date"].as_str().unwrap().to_string();
-                                        let datetime_utc: DateTime<Utc> =
-                                            datetime_str.parse().unwrap();
-                                        let datetime_jst = datetime_utc.with_timezone(&Tokyo);
-                                        let date_str = datetime_jst.format("%Y-%m-%d").to_string();
+                        let value = &obj["contents"][0];
 
-                                        context = Some(WebContext {
-                                            title: obj["title"].as_str().unwrap().to_string(),
-                                            version: date_str.to_string(),
-                                            chatgpt: obj["ChatGPT"]
-                                                .as_str()
-                                                .unwrap()
-                                                .split('\n')
-                                                .map(|s| {
-                                                    if s.is_empty() {
-                                                        "　".to_string()
-                                                    } else {
-                                                        s.to_string()
-                                                    }
-                                                })
-                                                .collect(),
-                                            claude: obj["Claude"]
-                                                .as_str()
-                                                .unwrap()
-                                                .split('\n')
-                                                .map(|s| {
-                                                    if s.is_empty() {
-                                                        "　".to_string()
-                                                    } else {
-                                                        s.to_string()
-                                                    }
-                                                })
-                                                .collect(),
-                                            gemini: obj["Gemini"]
-                                                .as_str()
-                                                .unwrap()
-                                                .split('\n')
-                                                .map(|s| {
-                                                    if s.is_empty() {
-                                                        "　".to_string()
-                                                    } else {
-                                                        s.to_string()
-                                                    }
-                                                })
-                                                .collect(),
-                                            copilot: obj["Copilot"]
-                                                .as_str()
-                                                .unwrap()
-                                                .split('\n')
-                                                .map(|s| {
-                                                    if s.is_empty() {
-                                                        "　".to_string()
-                                                    } else {
-                                                        s.to_string()
-                                                    }
-                                                })
-                                                .collect(),
-                                            prompt: obj["prompt"]
-                                                .as_str()
-                                                .unwrap()
-                                                .split('\n')
-                                                .map(|s| {
-                                                    if s.is_empty() {
-                                                        "　".to_string()
-                                                    } else {
-                                                        s.to_string()
-                                                    }
-                                                })
-                                                .collect(),
-                                            totalcount: totalcount,
-                                            offset: offset,
-                                            has_next: has_next,
-                                            has_prev: has_prev,
-                                        });
-                                    }
-                                }
-                            }
-                        }
+                        // 取得した日付をJSTに変換（日付データはISO 8601形式のUTC（協定世界時））
+                        let datetime_str = &value["date"].as_str().unwrap().to_string();
+                        let datetime_utc: DateTime<Utc> = datetime_str.parse().unwrap();
+                        let datetime_jst = datetime_utc.with_timezone(&Tokyo);
+                        let date_str = datetime_jst.format("%Y-%m-%d").to_string();
+
+                        // レスポンスの内容をセット
+                        context = Some(WebContext {
+                            title: value["title"].as_str().unwrap().to_string(),
+                            version: date_str.to_string(),
+                            chatgpt: get_string_from_value(&value, "ChatGPT"),
+                            claude: get_string_from_value(&value, "Claude"),
+                            gemini: get_string_from_value(&value, "Gemini"),
+                            copilot: get_string_from_value(&value, "Copilot"),
+                            prompt: get_string_from_value(&value, "prompt"),
+                            totalcount: totalcount,
+                            offset: offset,
+                            has_next: has_next,
+                            has_prev: has_prev,
+                        });
                     }
                 }
                 Err(_) => panic!("パニック1"),
@@ -238,6 +144,21 @@ async fn main() -> shuttle_rocket::ShuttleRocket {
     Ok(rocket.into())
 }
 
+fn get_string_from_value(data: &Value, key: &str) -> Vec<String> {
+    data[key]
+        .as_str()
+        .unwrap()
+        .split('\n')
+        .map(|s| {
+            if s.is_empty() {
+                "　".to_string()
+            } else {
+                s.to_string()
+            }
+        })
+        .collect()
+}
+
 //test
 #[cfg(test)]
 mod tests {
@@ -267,127 +188,9 @@ mod tests {
     }
     "#;
 
-
     #[test]
     fn test_json() {
-
-        let mut context: Option<WebContext> = None;
-
-        
-        println!("{}", HAIKU);
-        let obj: Value = serde_json::from_str(HAIKU).unwrap();
-        
-
-        let totalcount = obj["totalCount"].as_i64().unwrap();
-        print!("totalcount: {}", totalcount);
-
-
-        let totalcount = obj.get("totalCount");
-        let totalcount = match totalcount {
-            Some(totalcount) => totalcount.as_i64().unwrap(),
-            None => {
-                panic!("totalcountが取得できませんでした");
-            }
-        };
-        let offset = obj.get("offset");
-        
-        let offset = match offset {
-            Some(offset) => offset.as_i64().unwrap(),
-            None => {
-                panic!("offsetが取得できませんでした");
-            }
-        };
-
-        let has_prev = (totalcount - offset) > 1;
-        let has_next = offset > 0;
-
-
-
-        if let Some(contents) = obj.as_array() {
-            for content in contents {
-                if let Some(obj) = content.as_object() {
-                    
-                    // 取得した日付をJSTに変換（日付データはISO 8601形式のUTC（協定世界時））
-                    let datetime_str =
-                        obj["date"].as_str().unwrap().to_string();
-                    let datetime_utc: DateTime<Utc> =
-                        datetime_str.parse().unwrap();
-                    let datetime_jst = datetime_utc.with_timezone(&Tokyo);
-                    let date_str = datetime_jst.format("%Y-%m-%d").to_string();
-
-                    context = Some(WebContext {
-                        title: obj["title"].as_str().unwrap().to_string(),
-                        version: date_str.to_string(),
-                        chatgpt: obj["ChatGPT"]
-                            .as_str()
-                            .unwrap()
-                            .split('\n')
-                            .map(|s| {
-                                if s.is_empty() {
-                                    "　".to_string()
-                                } else {
-                                    s.to_string()
-                                }
-                            })
-                            .collect(),
-                        claude: obj["Claude"]
-                            .as_str()
-                            .unwrap()
-                            .split('\n')
-                            .map(|s| {
-                                if s.is_empty() {
-                                    "　".to_string()
-                                } else {
-                                    s.to_string()
-                                }
-                            })
-                            .collect(),
-                        gemini: obj["Gemini"]
-                            .as_str()
-                            .unwrap()
-                            .split('\n')
-                            .map(|s| {
-                                if s.is_empty() {
-                                    "　".to_string()
-                                } else {
-                                    s.to_string()
-                                }
-                            })
-                            .collect(),
-                        copilot: obj["Copilot"]
-                            .as_str()
-                            .unwrap()
-                            .split('\n')
-                            .map(|s| {
-                                if s.is_empty() {
-                                    "　".to_string()
-                                } else {
-                                    s.to_string()
-                                }
-                            })
-                            .collect(),
-                        prompt: obj["prompt"]
-                            .as_str()
-                            .unwrap()
-                            .split('\n')
-                            .map(|s| {
-                                if s.is_empty() {
-                                    "　".to_string()
-                                } else {
-                                    s.to_string()
-                                }
-                            })
-                            .collect(),
-                        totalcount: totalcount,
-                        offset: offset,
-                        has_next: has_next,
-                        has_prev: has_prev,
-                    });
-                }
-            }
-        }
-
-
-
+        let obj: Result<Value, serde_json::Error> = serde_json::from_str(HAIKU);
+        print!("{:?}", obj.unwrap());
     }
 }
