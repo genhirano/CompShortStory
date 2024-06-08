@@ -1,3 +1,6 @@
+extern crate rocket;
+use anyhow::Context;
+
 use chrono::{DateTime, Utc};
 use chrono_tz::Asia::Tokyo;
 use reqwest::header::HeaderMap;
@@ -10,6 +13,7 @@ use rocket::{get, post, routes};
 use rocket::{FromForm, State};
 use rocket_dyn_templates::Template;
 use serde_json::Value;
+use shuttle_runtime::SecretStore;
 
 struct MyState {
     secret: String,
@@ -54,8 +58,13 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
             // レスポンスのボディをJSONとしてパースして返す
             match resp.json::<serde_json::Value>().await {
                 Ok(content) => {
+                    /*パターンマッチングメモ
+                    if let Some(obj) = content.as_object(){
+                        Step1, content.asObject()がSome(*) の場合、objに中身をバインドする。
+                        つまり、obj は パターンマッチの評価時にはワイルドカードとしてみなされ、マッチした後は束縛する変数となる
+                    */
+
                     if let Some(obj) = content.as_object() {
-                        
                         //登録済みの全件数とオフセットを取得
                         let totalcount = obj.get("totalCount").unwrap().as_i64().unwrap();
                         let offset = obj.get("offset").unwrap().as_i64().unwrap();
@@ -126,12 +135,11 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
 }
 
 #[shuttle_runtime::main]
-async fn main() -> shuttle_rocket::ShuttleRocket {
-    // memo
-    // cargo shuttle resource delete secrets  ※Deploy済みのシークレットをShuttleから全部削除
-
-    //let secret = secrets.get("secret_key").context("secret was not found")?;
-    let secret = "pfcBd8oLiiBW240e7I9IDjy6jWXHkaLE2Qx2".to_string();
+async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
+    // get secret defined in `Secrets.toml` file.
+    let secret = secrets
+        .get("MICROCMS_KEY")
+        .context("secret was not found")?;
 
     let state = MyState { secret };
 
@@ -164,7 +172,15 @@ fn get_string_from_value(data: &Value, key: &str) -> Vec<String> {
 mod tests {
     use super::*;
 
-    const HAIKU: &'static str = r#"
+    /*
+    定数について
+    ライフサイクル指定する 'staticは、プログラムが終了するまでメモリ上に存在する
+    実際には const は 'static と同じライフタイムを持つが、'static は明示的に指定することで、プログラムの終了までメモリ上に存在することを示す
+    （&str でも良いか 'static を書いた方が明示的でわかりやすい）
+
+     */
+
+    const TESTDATA_ONE: &'static str = r#"
     {
         "contents": [
             {
@@ -190,7 +206,7 @@ mod tests {
 
     #[test]
     fn test_json() {
-        let obj: Result<Value, serde_json::Error> = serde_json::from_str(HAIKU);
+        let obj: Result<Value, serde_json::Error> = serde_json::from_str(TESTDATA_ONE);
         print!("{:?}", obj.unwrap());
     }
 }
