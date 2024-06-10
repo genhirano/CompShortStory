@@ -44,7 +44,7 @@
                     <div class="columns is-mobile is-centered">
                         <div class="column is-one-quarter">
                             {% if has_prev %}
-                            <button type="submit" name="directionBtn" value="prev"
+                            <button id="prev_btn" type="submit" name="directionBtn" value="prev"
                                 class="button is-large has-text-left is-responsive">
                                 <span class="icon">
                                     <i class="fas fa-angle-double-left"></i>
@@ -60,7 +60,7 @@
                         </div>
                         <div class="column is-one-quarter">
                             {% if has_next %}
-                            <button type="submit" name="directionBtn" value="next"
+                            <button id="next_btn" type="submit" name="directionBtn" value="next"
                                 class="button is-large has-text-left is-responsive">
                                 <span>次へ</span>
                                 <span class="icon">

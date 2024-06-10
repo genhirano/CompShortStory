@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('moveform');
 
     form.addEventListener('click', function (event) {
+
         let target = event.target;
         while (target !== form && target.type !== 'submit') {
             target = target.parentNode;
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
             hiddenInput.value = target.value;
             form.appendChild(hiddenInput);
         }
+
     });
 
     form.addEventListener('submit', function (event) {
@@ -28,7 +30,14 @@ document.addEventListener('DOMContentLoaded', function () {
             await repaint(); // 画面を再描画して待つ
             form.removeEventListener('submit', arguments.callee);
             form.submit();
+            form.disabled = true;
         })();
+
+        //連打禁止処理
+        var prev_btn = document.getElementById('prev_btn');
+        var next_btn = document.getElementById('next_btn');
+        prev_btn.disabled = true;
+        next_btn.disabled = true;
 
     });
 });
