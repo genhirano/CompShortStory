@@ -19,7 +19,7 @@
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="AI対抗 短編小説コンテスト">
-    <meta property="og:description" content="複数の生成AIが同じタイトルから短編小説を書きました。あなたはどのAIの作品が好きですか?">
+    <meta property="og:description" content="複数の生成AIが同じタイトルから短編小説を書きます。あなたはどれが好み？">
     <meta property="og:image" content="https://compshortstory.shuttleapp.rs/eyecatch.png">
     <meta property="og:url" content="https://compshortstory.shuttleapp.rs/">
     <meta property="og:type" content="website">
@@ -54,7 +54,7 @@
                             {% endif %}
                         </div>
                         <div class="column is-one-half has-text-white">
-                            <p> (ほぼ)毎日更新！</p>
+                            <p>毎日更新！</p>
                             <button type="button" id="loading" style="display:none;"
                                 class="button is-loading is-large"></button>
                         </div>
