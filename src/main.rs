@@ -135,7 +135,9 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
 }
 
 #[shuttle_runtime::main]
-async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
+async fn main(
+    #[shuttle_runtime::Secrets] secrets: SecretStore,
+) -> shuttle_rocket::ShuttleRocket {
     // get secret defined in `Secrets.toml` file.
     let secret = secrets
         .get("MICROCMS_KEY")
@@ -145,7 +147,7 @@ async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocke
 
     let rocket = rocket::build()
         .mount("/", routes![index, post_index])
-        .mount("/", FileServer::from(relative!("static")))
+        .mount("/", FileServer::from(relative!("assets"))) // 静的ファイルのPath設定。デフォルトは static
         .manage(state)
         .attach(Template::fairing());
 
