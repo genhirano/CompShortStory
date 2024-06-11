@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KG9Z45R3S"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-3KG9Z45R3S');
+    </script>
+    <title>AI対抗 短編小説コンテスト</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
+    <link rel="stylesheet" type="text/css" href="/main.css">
+    <meta name="viewport" content="width=device-width">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="AI対抗 短編小説コンテスト">
+    <meta property="og:description" content="複数の生成AIが同じタイトルから短編小説を書きます。あなたはどれが好み？">
+    <meta property="og:image" content="https://compshortstory.shuttleapp.rs/eyecatch.png">
+    <meta property="og:url" content="https://compshortstory.shuttleapp.rs/">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI対抗 短編小説コンテスト">
+    <meta name="twitter:description" content="複数の生成AIが同じタイトルから短編小説を書きました。あなたはどのAIの作品が好きですか?">
+    <meta name="twitter:image" content="https://compshortstory.shuttleapp.rs/eyecatch.png">
+
+</head>
+
+<body class="has-background-white-ter">
+
+    <section style="background-color:lightslategray;" class="hero is-small">
+        <div class="hero-body">
+            <div style="width:450px" class="container has-text-centered ">
+                <p class="title has-text-white is-3">AI Short Story Contest</p>
+                <p class="subtitle has-text-white  is-6">AI対抗 短編小説コンテスト!</p>
+            </div>
+        </div>
+    </section>
+    
+    {% block content %}
+    <!-- Default content goes here -->
+    {% endblock content %}
+
+    <footer style="background-color:lightslategray;" class="footer has-text-white">
+        <p class="has-text-centered has-text-weight-semibold">
+            hosted by <a href="https://www.shuttle.rs/" target="_blank">"Shuttle"</a> and written in the <a
+                href="https://www.rust-lang.org/" target="_blank">"Rust"</a>.
+        </p>
+        <p class="has-text-centered">
+            Copyright © 2022-2024 genhirano
+        </p>
+        <p class="has-text-centered">
+            All Rights Reserved
+        </p>
+        <p align="center">
+            <a class="button is-link" href="https://www.facebook.com/genhirano" target="_blank">
+                contact : <span class="icon"><i class="fab fa-facebook"></i></span>
+            </a>
+            <a class="button is-black" href="https://github.com/genhirano" target="_blank">
+                contact : <span class="icon"><i class="fab fa-github"></i></span>
+            </a>
+        </p>
+
+
+    </footer>
+
+    <script src="/main.js"></script>
+
+</body>
+
+</html>
