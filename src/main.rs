@@ -34,7 +34,7 @@ struct WebContext {
     has_prev: bool,
 }
 
-async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext> {
+async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext, String> {
     // microCMSのAPIエンドポイントとAPIキー
     let endpoint = format!(
         "https://wa4vehv99r.microcms.io/api/v1/aitext?limit=1&orders=-date&offset={}",
@@ -63,6 +63,11 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
                         Step1, content.asObject()がSome(*) の場合、objに中身をバインドする。
                         つまり、obj は パターンマッチの評価時にはワイルドカードとしてみなされ、マッチした後は束縛する変数となる
                     */
+
+                    //データ取得チェック
+                    if content.get("totalCount").is_none() {
+                        return Err("データが正しく受信できませんでした".to_string());
+                    };
 
                     if let Some(obj) = content.as_object() {
                         //登録済みの全件数とオフセットを取得
@@ -96,21 +101,23 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Option<WebContext>
                         });
                     }
                 }
-                Err(_) => panic!("パニック1"),
+                Err(errobj) => return Err(errobj.to_string()),
             }
         }
-        Err(_) => panic!("パニック2"),
+        Err(errobj) => return Err(errobj.to_string()),
     }
 
-    return context;
+    return Ok(context.unwrap());
 }
 
 #[get("/")]
 async fn index(state: &State<MyState>) -> Template {
     let context = getdata_from_microcms(state.secret.as_str(), 0);
     match context.await {
-        Some(context) => Template::render("index", &context),
-        None => panic!("パニック3"),
+        Ok(context) => Template::render("index", &context),
+        Err(message) => {
+            Template::render("error", serde_json::json!({"message":message}))
+    },
     }
 }
 
@@ -129,15 +136,13 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
 
     let context = getdata_from_microcms(state.secret.as_str(), offset);
     match context.await {
-        Some(context) => Template::render("index", &context),
-        None => panic!("パニック3"),
+        Ok(context) => Template::render("index", &context),
+        _ => Template::render("error", serde_json::json!({})),
     }
 }
 
 #[shuttle_runtime::main]
-async fn main(
-    #[shuttle_runtime::Secrets] secrets: SecretStore,
-) -> shuttle_rocket::ShuttleRocket {
+async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
     // get secret defined in `Secrets.toml` file.
     let secret = secrets
         .get("MICROCMS_KEY")

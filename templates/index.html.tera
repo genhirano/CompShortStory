@@ -1,200 +1,136 @@
-<!DOCTYPE html>
-<html lang="ja">
+{% extends "base" %}
+{% block content %}
 
-<head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3KG9Z45R3S"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-3KG9Z45R3S');
-    </script>
-    <title>AI対抗 短編小説コンテスト</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
-    <link rel="stylesheet" type="text/css" href="/main.css">
-    <meta name="viewport" content="width=device-width">
-
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="AI対抗 短編小説コンテスト">
-    <meta property="og:description" content="複数の生成AIが同じタイトルから短編小説を書きます。あなたはどれが好み？">
-    <meta property="og:image" content="https://compshortstory.shuttleapp.rs/eyecatch.png">
-    <meta property="og:url" content="https://compshortstory.shuttleapp.rs/">
-    <meta property="og:type" content="website">
-
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="AI対抗 短編小説コンテスト">
-    <meta name="twitter:description" content="複数の生成AIが同じタイトルから短編小説を書きました。あなたはどのAIの作品が好きですか?">
-    <meta name="twitter:image" content="https://compshortstory.shuttleapp.rs/eyecatch.png">
-
-</head>
-
-<body class="has-background-white-ter">
-
-    <section style="background-color:lightslategray;" class="hero is-small">
-        <div class="hero-body">
-            <div style="width:450px" class="container has-text-centered ">
-                <p class="title has-text-white is-3">AI Short Story Contest</p>
-                <p class="subtitle has-text-white  is-6">AI対抗 短編小説コンテスト!</p>
-
-                <form id="moveform" action="/" method="post">
-                    <div class="columns is-mobile is-centered">
-                        <div class="column is-one-quarter">
-                            {% if has_prev %}
-                            <button id="prev_btn" type="submit" name="directionBtn" value="prev"
-                                class="button is-large has-text-left is-responsive">
-                                <span class="icon">
-                                    <i class="fas fa-angle-double-left"></i>
-                                </span>
-                                <span>前へ</span>
-                            </button>
-                            {% endif %}
-                        </div>
-                        <div class="column is-one-half has-text-white">
-                            <p>毎日更新！</p>
-                            <button type="button" id="loading" style="display:none;"
-                                class="button is-loading is-large"></button>
-                        </div>
-                        <div class="column is-one-quarter">
-                            {% if has_next %}
-                            <button id="next_btn" type="submit" name="directionBtn" value="next"
-                                class="button is-large has-text-left is-responsive">
-                                <span>次へ</span>
-                                <span class="icon">
-                                    <i class="fas fa-angle-double-right"></i>
-                                </span>
-                            </button>
-                            {% endif %}
-                        </div>
+<section style="background-color:lightslategray;" class="hero is-small">
+    <div class="hero-body">
+        <div style="width:450px" class="container has-text-centered ">
+            <form id="moveform" action="/" method="post">
+                <div class="columns is-mobile is-centered">
+                    <div class="column is-one-quarter">
+                        {% if has_prev %}
+                        <button id="prev_btn" type="submit" name="directionBtn" value="prev"
+                            class="button is-large has-text-left is-responsive">
+                            <span class="icon">
+                                <i class="fas fa-angle-double-left"></i>
+                            </span>
+                            <span>前へ</span>
+                        </button>
+                        {% endif %}
                     </div>
-                    <input type="hidden" id="" name="currentoffset" value="{{ offset }}" />
-                </form>
+                    <div class="column is-one-half has-text-white">
+                        <p>毎日更新！</p>
+                        <button type="button" id="loading" style="display:none;"
+                            class="button is-loading is-large"></button>
+                    </div>
+                    <div class="column is-one-quarter">
+                        {% if has_next %}
+                        <button id="next_btn" type="submit" name="directionBtn" value="next"
+                            class="button is-large has-text-left is-responsive">
+                            <span>次へ</span>
+                            <span class="icon">
+                                <i class="fas fa-angle-double-right"></i>
+                            </span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <input type="hidden" id="" name="currentoffset" value="{{ offset }}" />
+            </form>
 
-            </div>
-        </div>
-    </section>
-
-    <div class="column is-8 is-offset-2">
-        <div class="card article">
-            <div class="card-content has-text-centered has-text-black has-background-white">
-                <p class="has-text-black">{{ version }}</p>
-                <h1 class="title is-4 has-text-black">{{ title }}</h1>
-            </div>
         </div>
     </div>
+</section>
 
-    <div class="column is-8 is-offset-2">
-        <div class="card article">
-            <div class="card-content has-text-centered has-text-black has-background-white">
-                <div class="say left">
-                    <p class="faceicon"><img decoding="async" src="/chatGPT.png">
-                        <span class="is-size-6 has-text-black">ChatGPT</span>
-                    </p>
-                    <div class="chatting">
-                        <div class="sc">
-                            {% for text in chatgpt %}
-                            <p class="text">{{ text }}</p>
-                            {% endfor %}
-                        </div>
+<div class="column is-8 is-offset-2">
+    <div class="card article">
+        <div class="card-content has-text-centered has-text-black has-background-white">
+            <p class="has-text-black">{{ version }}</p>
+            <h1 class="title is-4 has-text-black">{{ title }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="column is-8 is-offset-2">
+    <div class="card article">
+        <div class="card-content has-text-centered has-text-black has-background-white">
+            <div class="say left">
+                <p class="faceicon"><img decoding="async" src="/chatGPT.png">
+                    <span class="is-size-6 has-text-black">ChatGPT</span>
+                </p>
+                <div class="chatting">
+                    <div class="sc">
+                        {% for text in chatgpt %}
+                        <p class="text">{{ text }}</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="column is-8 is-offset-2">
-        <div class="card article">
-            <div class="card-content has-text-centered has-text-black has-background-white">
-                <div class="say left">
-                    <p class="faceicon"><img decoding="async" src="/Claude.gif"><span
-                            class="is-size-6 has-text-black">Claude</span></p>
-                    <div class="chatting">
-                        <div class="sc">
-                            {% for text in claude %}
-                            <p class="text">{{ text }}</p>
-                            {% endfor %}
-                        </div>
+<div class="column is-8 is-offset-2">
+    <div class="card article">
+        <div class="card-content has-text-centered has-text-black has-background-white">
+            <div class="say left">
+                <p class="faceicon"><img decoding="async" src="/Claude.gif"><span
+                        class="is-size-6 has-text-black">Claude</span></p>
+                <div class="chatting">
+                    <div class="sc">
+                        {% for text in claude %}
+                        <p class="text">{{ text }}</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="column is-8 is-offset-2">
-        <div class="card article">
-            <div class="card-content has-text-centered has-text-black has-background-white">
-                <div class="say left">
-                    <p class="faceicon"><img decoding="async" src="/Gemini.png"><span
-                            class="is-size-6 has-text-black">Gemini</span></p>
-                    <div class="chatting">
-                        <div class="sc">
-                            {% for text in gemini %}
-                            <p class="text">{{ text }}</p>
-                            {% endfor %}
-                        </div>
+<div class="column is-8 is-offset-2">
+    <div class="card article">
+        <div class="card-content has-text-centered has-text-black has-background-white">
+            <div class="say left">
+                <p class="faceicon"><img decoding="async" src="/Gemini.png"><span
+                        class="is-size-6 has-text-black">Gemini</span></p>
+                <div class="chatting">
+                    <div class="sc">
+                        {% for text in gemini %}
+                        <p class="text">{{ text }}</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="column is-8 is-offset-2">
-        <div class="card article">
-            <div class="card-content has-text-centered has-text-black has-background-white">
-                <div class="say left">
-                    <p class="faceicon"><img decoding="async" src="/bing_copilot.png"><span
-                            class="is-size-6 has-text-black">copilot</span></p>
-                    <div class="chatting">
-                        <div class="sc">
-                            {% for text in copilot %}
-                            <p class="text">{{ text }}</p>
-                            {% endfor %}
-                        </div>
+<div class="column is-8 is-offset-2">
+    <div class="card article">
+        <div class="card-content has-text-centered has-text-black has-background-white">
+            <div class="say left">
+                <p class="faceicon"><img decoding="async" src="/bing_copilot.png"><span
+                        class="is-size-6 has-text-black">copilot</span></p>
+                <div class="chatting">
+                    <div class="sc">
+                        {% for text in copilot %}
+                        <p class="text">{{ text }}</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="column is-8 is-offset-2">
-        <div class="card article">
-            <div class="card-content has-text-black has-background-white">
-                <h1 class="title is-5 has-text-black">Prompt is</h1>
-                {% for text in prompt %}
-                <p class="prompttext">{{ text }}</p>
-                {% endfor %}
-            </div>
+<div class="column is-8 is-offset-2">
+    <div class="card article">
+        <div class="card-content has-text-black has-background-white">
+            <h1 class="title is-5 has-text-black">Prompt is</h1>
+            {% for text in prompt %}
+            <p class="prompttext">{{ text }}</p>
+            {% endfor %}
         </div>
     </div>
-
-    <footer style="background-color:lightslategray;" class="footer has-text-white">
-        <p class="has-text-centered has-text-weight-semibold">
-            hosted by <a href="https://www.shuttle.rs/" target="_blank">"Shuttle"</a> and written in the <a
-                href="https://www.rust-lang.org/" target="_blank">"Rust"</a>.
-        </p>
-        <p class="has-text-centered">
-            Copyright © 2022-2024 genhirano
-        </p>
-        <p class="has-text-centered">
-            All Rights Reserved
-        </p>
-        <p align="center">
-            <a class="button is-link" href="https://www.facebook.com/genhirano" target="_blank">
-                contact : <span class="icon"><i class="fab fa-facebook"></i></span>
-            </a>
-            <a class="button is-black" href="https://github.com/genhirano" target="_blank">
-                contact : <span class="icon"><i class="fab fa-github"></i></span>
-            </a>
-        </p>
-
-
-    </footer>
-
-    <script src="/main.js"></script>
-
-</body>
-
-</html>
+</div>
+{% endblock content %}
