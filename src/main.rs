@@ -20,7 +20,7 @@ struct MyState {
     secret: String,
 }
 
-// テンプレートに渡すデータを定義
+// HTMLテンプレートに渡すデータを定義
 #[derive(Serialize)]
 struct WebContext {
     title: String,
@@ -43,7 +43,6 @@ fn take_value_from_json(obj: &Value, key: &str) -> Result<i64, String> {
         .ok_or(key.to_string() + " not found")?
         .as_i64()
         .ok_or(key.to_string() + " is not an integer")?;
-
     Ok(text)
 }
 
@@ -73,31 +72,35 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
     // APIキーをヘッダーに設定
     let mut headers = HeaderMap::new();
     headers.insert("X-API-KEY", api_key.parse().unwrap());
+    //.parse()メソッドは、FromStrトレイトを実装している任意の型に対して使用できます。このメソッドは、Result型を返します。
 
-    // HTTPクライアントを初期化
+
+    // HTTPクライアントを作成
     let client = Client::new();
 
-    // コンテンツを取得
+    // APIでコンテンツを取得
     let response = client.get(endpoint).headers(headers).send().await;
     if response.is_err() {
         return Err("APIエラー".to_string());
     }
     let response = response.unwrap();
 
+    // コンテンツをJsonに解釈
     let value = response.json::<serde_json::Value>().await;
     if value.is_err() {
         return Err("JSONエラー".to_string());
     }
     let value = value.unwrap();
 
+    //記事の総数と現在位置を取得
     let totalcount = take_value_from_json(&value, "totalCount").unwrap();
     let offset = take_value_from_json(&value, "offset").unwrap();
 
-    //登録記事の現在位置を把握（次ボタンや前ボタンの表示制御に使用）
+    //（次ボタンや前ボタンの表示制御に使用）
     let has_prev = (totalcount - offset) > 1;
     let has_next = offset > 0;
 
-    //記事取得（日付降順ソートされた配列の０番目の一つのみ取得）
+    //記事本文取得（日付降順ソートされた配列の０番目の一つのみ取得）
     let body_data = value.as_object();
     if body_data.is_none() {
         return Err("JSONエラー".to_string());
@@ -130,7 +133,11 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
 
 #[get("/")]
 async fn index(state: &State<MyState>) -> Template {
+    
+    //最新記事（offset=0）を取得
     let context = getdata_from_microcms(state.secret.as_str(), 0);
+    
+    //ページ遷移
     match context.await {
         Ok(context) => Template::render("index", &context),
         Err(message) => Template::render("error", serde_json::json!({"message":message})),
@@ -146,12 +153,20 @@ struct PostData {
 
 #[post("/", data = "<arg>")]
 async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
+    
+    // 次ボタン「next」、前ボタン「prev」
     let direction = &arg.direction;
-    let currentoffset = &arg.currentoffset;
+    
+    //現在の記事位置
+    let current_offset = &arg.currentoffset;
 
-    let offset = currentoffset + if direction == "next" { -1 } else { 1 };
+    //ページ遷移後の記事位置
+    let offset = current_offset + if direction == "next" { -1 } else { 1 };
 
+    //記事データ取得
     let context = getdata_from_microcms(state.secret.as_str(), offset);
+    
+    //ページ遷移
     match context.await {
         Ok(context) => Template::render("index", &context),
         Err(message) => Template::render("error", serde_json::json!({"message":message})),
@@ -159,10 +174,11 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
 }
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
+
+    //Shuttle の secret データ取得
     let secret = secrets
         .get("MICROCMS_KEY")
         .context("secret was not found")?;
-
     let state = MyState { secret };
 
     let rocket = rocket::build()
