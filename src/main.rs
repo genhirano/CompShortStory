@@ -15,10 +15,12 @@ use rocket_dyn_templates::Template;
 use serde_json::Value;
 use shuttle_runtime::SecretStore;
 
+// Shuttle の secret に設定された値
 struct MyState {
     secret: String,
 }
 
+// テンプレートに渡すデータを定義
 #[derive(Serialize)]
 struct WebContext {
     title: String,
@@ -34,8 +36,35 @@ struct WebContext {
     has_prev: bool,
 }
 
+// Json (serde_json::value) から文字列を取得してそのまま返す
+fn take_value_from_json(obj: &Value, key: &str) -> Result<i64, String> {
+    let text = obj
+        .get(&key)
+        .ok_or(key.to_string() + " not found")?
+        .as_i64()
+        .ok_or(key.to_string() + " is not an integer")?;
+
+    Ok(text)
+}
+
+// Json (serde_json::value) から、改行コードを含む文字列を取得して、各行のVecterにして返す
+fn take_value_from_json_with_line(data: &Value, key: &str) -> Vec<String> {
+    data[key]
+        .as_str()
+        .unwrap()
+        .split('\n')
+        .map(|s| {
+            if s.is_empty() {
+                "　".to_string()
+            } else {
+                s.to_string()
+            }
+        })
+        .collect()
+}
+
+// microCMSからデータを取得
 async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext, String> {
-    // microCMSのAPIエンドポイントとAPIキー
     let endpoint = format!(
         "https://wa4vehv99r.microcms.io/api/v1/aitext?limit=1&orders=-date&offset={}",
         offset
@@ -50,64 +79,53 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
 
     // コンテンツを取得
     let response = client.get(endpoint).headers(headers).send().await;
-
-    let mut context: Option<WebContext> = None;
-
-    match response {
-        Ok(resp) => {
-            // レスポンスのボディをJSONとしてパースして返す
-            match resp.json::<serde_json::Value>().await {
-                Ok(content) => {
-                    /*パターンマッチングメモ
-                    if let Some(obj) = content.as_object(){
-                        Step1, content.asObject()がSome(*) の場合、objに中身をバインドする。
-                        つまり、obj は パターンマッチの評価時にはワイルドカードとしてみなされ、マッチした後は束縛する変数となる
-                    */
-
-                    //データ取得チェック
-                    if content.get("totalCount").is_none() {
-                        return Err("データが正しく受信できませんでした".to_string());
-                    };
-
-                    if let Some(obj) = content.as_object() {
-                        //登録済みの全件数とオフセットを取得
-                        let totalcount = obj.get("totalCount").unwrap().as_i64().unwrap();
-                        let offset = obj.get("offset").unwrap().as_i64().unwrap();
-
-                        let has_prev = (totalcount - offset) > 1;
-                        let has_next = offset > 0;
-
-                        let value = &obj["contents"][0];
-
-                        // 取得した日付をJSTに変換（日付データはISO 8601形式のUTC（協定世界時））
-                        let datetime_str = &value["date"].as_str().unwrap().to_string();
-                        let datetime_utc: DateTime<Utc> = datetime_str.parse().unwrap();
-                        let datetime_jst = datetime_utc.with_timezone(&Tokyo);
-                        let date_str = datetime_jst.format("%Y-%m-%d").to_string();
-
-                        // レスポンスの内容をセット
-                        context = Some(WebContext {
-                            title: value["title"].as_str().unwrap().to_string(),
-                            version: date_str.to_string(),
-                            chatgpt: get_string_from_value(&value, "ChatGPT"),
-                            claude: get_string_from_value(&value, "Claude"),
-                            gemini: get_string_from_value(&value, "Gemini"),
-                            copilot: get_string_from_value(&value, "Copilot"),
-                            prompt: get_string_from_value(&value, "prompt"),
-                            totalcount: totalcount,
-                            offset: offset,
-                            has_next: has_next,
-                            has_prev: has_prev,
-                        });
-                    }
-                }
-                Err(errobj) => return Err(errobj.to_string()),
-            }
-        }
-        Err(errobj) => return Err(errobj.to_string()),
+    if response.is_err() {
+        return Err("APIエラー".to_string());
     }
+    let response = response.unwrap();
 
-    return Ok(context.unwrap());
+    let value = response.json::<serde_json::Value>().await;
+    if value.is_err() {
+        return Err("JSONエラー".to_string());
+    }
+    let value = value.unwrap();
+
+    let totalcount = take_value_from_json(&value, "totalCount").unwrap();
+    let offset = take_value_from_json(&value, "offset").unwrap();
+
+    //登録記事の現在位置を把握（次ボタンや前ボタンの表示制御に使用）
+    let has_prev = (totalcount - offset) > 1;
+    let has_next = offset > 0;
+
+    //記事取得（日付降順ソートされた配列の０番目の一つのみ取得）
+    let body_data = value.as_object();
+    if body_data.is_none() {
+        return Err("JSONエラー".to_string());
+    }
+    let value = &body_data.unwrap()["contents"][0];
+
+    // 記事の日付をJSTに変換（日付データはISO 8601形式のUTC（協定世界時））
+    let datetime_str = &value["date"].as_str().unwrap().to_string();
+    let datetime_utc: DateTime<Utc> = datetime_str.parse().unwrap();
+    let datetime_jst = datetime_utc.with_timezone(&Tokyo);
+    let date_str = datetime_jst.format("%Y-%m-%d").to_string();
+
+    // レスポンスの内容をセット
+    let context = WebContext {
+        title: value["title"].as_str().unwrap().to_string(),
+        version: date_str.to_string(),
+        chatgpt: take_value_from_json_with_line(&value, "ChatGPT"),
+        claude: take_value_from_json_with_line(&value, "Claude"),
+        gemini: take_value_from_json_with_line(&value, "Gemini"),
+        copilot: take_value_from_json_with_line(&value, "Copilot"),
+        prompt: take_value_from_json_with_line(&value, "prompt"),
+        totalcount: totalcount,
+        offset: offset,
+        has_next: has_next,
+        has_prev: has_prev,
+    };
+
+    Ok(context)
 }
 
 #[get("/")]
@@ -115,12 +133,11 @@ async fn index(state: &State<MyState>) -> Template {
     let context = getdata_from_microcms(state.secret.as_str(), 0);
     match context.await {
         Ok(context) => Template::render("index", &context),
-        Err(message) => {
-            Template::render("error", serde_json::json!({"message":message}))
-    },
+        Err(message) => Template::render("error", serde_json::json!({"message":message})),
     }
 }
 
+// HTTP フォームデータ
 #[derive(FromForm)]
 struct PostData {
     direction: String,
@@ -137,13 +154,11 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
     let context = getdata_from_microcms(state.secret.as_str(), offset);
     match context.await {
         Ok(context) => Template::render("index", &context),
-        _ => Template::render("error", serde_json::json!({})),
+        Err(message) => Template::render("error", serde_json::json!({"message":message})),
     }
 }
-
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
-    // get secret defined in `Secrets.toml` file.
     let secret = secrets
         .get("MICROCMS_KEY")
         .context("secret was not found")?;
@@ -152,26 +167,11 @@ async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocke
 
     let rocket = rocket::build()
         .mount("/", routes![index, post_index])
-        .mount("/", FileServer::from(relative!("assets"))) // 静的ファイルのPath設定。デフォルトは static
+        .mount("/", FileServer::from(relative!("assets"))) // 静的ファイルのPath設定。デフォルトは staticだが、assetsに変更する
         .manage(state)
         .attach(Template::fairing());
 
     Ok(rocket.into())
-}
-
-fn get_string_from_value(data: &Value, key: &str) -> Vec<String> {
-    data[key]
-        .as_str()
-        .unwrap()
-        .split('\n')
-        .map(|s| {
-            if s.is_empty() {
-                "　".to_string()
-            } else {
-                s.to_string()
-            }
-        })
-        .collect()
 }
 
 //test
