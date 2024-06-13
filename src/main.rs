@@ -15,6 +15,8 @@ use rocket_dyn_templates::Template;
 use serde_json::Value;
 use shuttle_runtime::SecretStore;
 
+use rocket::serde::json::Json;
+
 // Shuttle の secret に設定された値
 struct MyState {
     secret: String,
@@ -74,7 +76,6 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
     headers.insert("X-API-KEY", api_key.parse().unwrap());
     //.parse()メソッドは、FromStrトレイトを実装している任意の型に対して使用できます。このメソッドは、Result型を返します。
 
-
     // HTTPクライアントを作成
     let client = Client::new();
 
@@ -133,10 +134,9 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
 
 #[get("/")]
 async fn index(state: &State<MyState>) -> Template {
-    
     //最新記事（offset=0）を取得
     let context = getdata_from_microcms(state.secret.as_str(), 0);
-    
+
     //ページ遷移
     match context.await {
         Ok(context) => Template::render("index", &context),
@@ -153,10 +153,9 @@ struct PostData {
 
 #[post("/", data = "<arg>")]
 async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
-    
     // 次ボタン「next」、前ボタン「prev」
     let direction = &arg.direction;
-    
+
     //現在の記事位置
     let current_offset = &arg.currentoffset;
 
@@ -165,16 +164,37 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
 
     //記事データ取得
     let context = getdata_from_microcms(state.secret.as_str(), offset);
-    
+
     //ページ遷移
     match context.await {
         Ok(context) => Template::render("index", &context),
         Err(message) => Template::render("error", serde_json::json!({"message":message})),
     }
 }
+
+#[get("/api")]
+async fn api(state: &State<MyState>) -> Json<WebContext> {
+    let context = getdata_from_microcms(state.secret.as_str(), 0);
+    match context.await {
+        Ok(context) => return Json(context),
+        Err(message) => return Json(WebContext {
+            title: "エラー".to_string(),
+            version: message,
+            chatgpt: vec!["エラー".to_string()],
+            claude: vec!["エラー".to_string()],
+            gemini: vec!["エラー".to_string()],
+            copilot: vec!["エラー".to_string()],
+            prompt: vec!["エラー".to_string()],
+            totalcount: 0,
+            offset: 0,
+            has_next: false,
+            has_prev: false,
+        }),
+    }
+}
+
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
-
     //Shuttle の secret データ取得
     let secret = secrets
         .get("MICROCMS_KEY")
@@ -182,7 +202,7 @@ async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocke
     let state = MyState { secret };
 
     let rocket = rocket::build()
-        .mount("/", routes![index, post_index])
+        .mount("/", routes![index, post_index, api])
         .mount("/", FileServer::from(relative!("assets"))) // 静的ファイルのPath設定。デフォルトは staticだが、assetsに変更する
         .manage(state)
         .attach(Template::fairing());
