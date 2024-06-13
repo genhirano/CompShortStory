@@ -16,6 +16,7 @@ use serde_json::Value;
 use shuttle_runtime::SecretStore;
 
 use rocket::serde::json::Json;
+use rocket_cors::{CorsOptions, AllowedOrigins};
 
 // Shuttle の secret に設定された値
 struct MyState {
@@ -201,11 +202,17 @@ async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocke
         .context("secret was not found")?;
     let state = MyState { secret };
 
+    let cors = CorsOptions::default()
+    .to_cors()
+    .expect("CorsOptions failed to create a CORS fairing");
+
+
     let rocket = rocket::build()
         .mount("/", routes![index, post_index, api])
         .mount("/", FileServer::from(relative!("assets"))) // 静的ファイルのPath設定。デフォルトは staticだが、assetsに変更する
         .manage(state)
-        .attach(Template::fairing());
+        .attach(Template::fairing())
+        .attach(cors);
 
     Ok(rocket.into())
 }
