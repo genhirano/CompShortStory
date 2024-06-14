@@ -16,7 +16,7 @@ use serde_json::Value;
 use shuttle_runtime::SecretStore;
 
 use rocket::serde::json::Json;
-use rocket_cors::{CorsOptions, AllowedOrigins};
+use rocket_cors::{AllowedOrigins, CorsOptions};
 
 // Shuttle の secret に設定された値
 struct MyState {
@@ -24,7 +24,7 @@ struct MyState {
 }
 
 // HTMLテンプレートに渡すデータを定義
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct WebContext {
     title: String,
     version: String,
@@ -173,25 +173,47 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
     }
 }
 
-#[get("/api")]
-async fn api(state: &State<MyState>) -> Json<WebContext> {
-    let context = getdata_from_microcms(state.secret.as_str(), 0);
+#[derive(FromForm)]
+struct GetRequestParam {
+    direction: String,
+    currentoffset: i64,
+}
+
+#[get("/api?<query..>")]
+async fn api(query: GetRequestParam, state: &State<MyState>) -> Json<WebContext> {
+    //http://127.0.0.1:8000/api?direction=1&currentoffset=2&aa=d
+
+    if !((query.direction == "next") || (query.direction == "prev") || (query.direction == "now")) {
+        return create_err_json_data("directionの値が不正です".to_string());
+    }
+
+    let offset = match query.direction.as_str() {
+        "next" => query.currentoffset - 1,
+        "prev" => query.currentoffset + 1,
+        _ => 0, // "now"の場合とそれ以外
+    };
+
+    let context = getdata_from_microcms(state.secret.as_str(), offset);
     match context.await {
         Ok(context) => return Json(context),
-        Err(message) => return Json(WebContext {
-            title: "エラー".to_string(),
-            version: message,
-            chatgpt: vec!["エラー".to_string()],
-            claude: vec!["エラー".to_string()],
-            gemini: vec!["エラー".to_string()],
-            copilot: vec!["エラー".to_string()],
-            prompt: vec!["エラー".to_string()],
-            totalcount: 0,
-            offset: 0,
-            has_next: false,
-            has_prev: false,
-        }),
+        Err(message) => return create_err_json_data(message),
     }
+}
+
+fn create_err_json_data(reson: String) -> Json<WebContext> {
+    Json(WebContext {
+        title: reson.to_string(),
+        version: "エラー".to_string(),
+        chatgpt: vec!["エラー".to_string()],
+        claude: vec!["エラー".to_string()],
+        gemini: vec!["エラー".to_string()],
+        copilot: vec!["エラー".to_string()],
+        prompt: vec!["エラー".to_string()],
+        totalcount: 0,
+        offset: 0,
+        has_next: false,
+        has_prev: false,
+    })
 }
 
 #[shuttle_runtime::main]
@@ -203,9 +225,8 @@ async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocke
     let state = MyState { secret };
 
     let cors = CorsOptions::default()
-    .to_cors()
-    .expect("CorsOptions failed to create a CORS fairing");
-
+        .to_cors()
+        .expect("CorsOptions failed to create a CORS fairing");
 
     let rocket = rocket::build()
         .mount("/", routes![index, post_index, api])
