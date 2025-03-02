@@ -16,7 +16,7 @@ use serde_json::Value;
 use shuttle_runtime::SecretStore;
 
 use rocket::serde::json::Json;
-use rocket_cors::{AllowedOrigins, CorsOptions};
+use rocket_cors::CorsOptions;
 
 // Shuttle の secret に設定された値
 struct MyState {

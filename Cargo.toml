@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.66"
 rocket = { version = "0.5.0", features = ["tls", "json"] }
-shuttle-rocket = "0.45.0"
-shuttle-runtime = "0.45.0"
+shuttle-rocket = "0.52.0"
+shuttle-runtime = "0.52.0"
 rocket_cors = "0.6.0"
 tokio = "1.26.0"
 reqwest = { version = "0.12.4", features = ["json"] }
