@@ -1,16 +1,18 @@
 extern crate rocket;
+use std::env;
+use std::path::{Path, PathBuf};
 use anyhow::Context;
 
-use chrono::{DateTime, Utc};
+use chrono::{ DateTime, Utc };
 use chrono_tz::Asia::Tokyo;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
 use rocket::form::Form;
-use rocket::fs::{relative, FileServer};
+use rocket::fs::{ relative, FileServer };
 use rocket::serde::json::serde_json;
 use rocket::serde::Serialize;
-use rocket::{get, post, routes};
-use rocket::{FromForm, State};
+use rocket::{ get, post, routes };
+use rocket::{ FromForm, State };
 use rocket_dyn_templates::Template;
 use serde_json::Value;
 use shuttle_runtime::SecretStore;
@@ -56,21 +58,15 @@ fn take_value_from_json_with_line(data: &Value, key: &str) -> Vec<String> {
         .unwrap()
         .split('\n')
         .map(|s| {
-            if s.is_empty() {
-                "　".to_string()
-            } else {
-                s.to_string()
-            }
+            if s.is_empty() { "　".to_string() } else { s.to_string() }
         })
         .collect()
 }
 
 // microCMSからデータを取得
 async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext, String> {
-    let endpoint = format!(
-        "https://wa4vehv99r.microcms.io/api/v1/aitext?limit=1&orders=-date&offset={}",
-        offset
-    );
+    let endpoint =
+        format!("https://wa4vehv99r.microcms.io/api/v1/aitext?limit=1&orders=-date&offset={}", offset);
 
     // APIキーをヘッダーに設定
     let mut headers = HeaderMap::new();
@@ -99,7 +95,7 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
     let offset = take_value_from_json(&value, "offset").unwrap();
 
     //（次ボタンや前ボタンの表示制御に使用）
-    let has_prev = (totalcount - offset) > 1;
+    let has_prev = totalcount - offset > 1;
     let has_next = offset > 0;
 
     //記事本文取得（日付降順ソートされた配列の０番目の一つのみ取得）
@@ -161,7 +157,7 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
     let current_offset = &arg.currentoffset;
 
     //ページ遷移後の記事位置
-    let offset = current_offset + if direction == "next" { -1 } else { 1 };
+    let offset = current_offset + (if direction == "next" { -1 } else { 1 });
 
     //記事データ取得
     let context = getdata_from_microcms(state.secret.as_str(), offset);
@@ -183,7 +179,7 @@ struct GetRequestParam {
 async fn api(query: GetRequestParam, state: &State<MyState>) -> Json<WebContext> {
     //http://127.0.0.1:8000/api?direction=1&currentoffset=2&aa=d
 
-    if !((query.direction == "next") || (query.direction == "prev") || (query.direction == "now")) {
+    if !(query.direction == "next" || query.direction == "prev" || query.direction == "now") {
         return create_err_json_data("directionの値が不正です".to_string());
     }
 
@@ -195,8 +191,12 @@ async fn api(query: GetRequestParam, state: &State<MyState>) -> Json<WebContext>
 
     let context = getdata_from_microcms(state.secret.as_str(), offset);
     match context.await {
-        Ok(context) => return Json(context),
-        Err(message) => return create_err_json_data(message),
+        Ok(context) => {
+            return Json(context);
+        }
+        Err(message) => {
+            return create_err_json_data(message);
+        }
     }
 }
 
@@ -219,18 +219,20 @@ fn create_err_json_data(reson: String) -> Json<WebContext> {
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] secrets: SecretStore) -> shuttle_rocket::ShuttleRocket {
     //Shuttle の secret データ取得
-    let secret = secrets
-        .get("MICROCMS_KEY")
-        .context("secret was not found")?;
+    let secret = secrets.get("MICROCMS_KEY").context("secret was not found")?;
     let state = MyState { secret };
 
     let cors = CorsOptions::default()
         .to_cors()
         .expect("CorsOptions failed to create a CORS fairing");
 
-    let rocket = rocket::build()
+    //assetsの絶対パスを取得
+    let asstspath = Path::new(relative!("assets"));
+
+    let rocket = rocket
+        ::build()
         .mount("/", routes![index, post_index, api])
-        .mount("/", FileServer::from(relative!("assets"))) // 静的ファイルのPath設定。デフォルトは staticだが、assetsに変更する
+        .mount("/", FileServer::from(asstspath)) // 静的ファイルのPath設定。デフォルトは staticだが、assetsに変更する
         .manage(state)
         .attach(Template::fairing())
         .attach(cors);
@@ -251,7 +253,8 @@ mod tests {
 
      */
 
-    const TESTDATA_ONE: &'static str = r#"
+    const TESTDATA_ONE: &'static str =
+        r#"
     {
         "contents": [
             {

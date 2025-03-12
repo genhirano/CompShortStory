@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.66"
-rocket = { version = "0.5.0", features = ["tls", "json"] }
+rocket = { version = "0.5.1", features = ["tls", "json"] }
 shuttle-rocket = "0.52.0"
 shuttle-runtime = "0.52.0"
 rocket_cors = "0.6.0"

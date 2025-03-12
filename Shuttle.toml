@@ -1,0 +1,6 @@
+[build]
+assets = [
+    "Rocket.toml",
+    "templates",
+    "assets",
+]
