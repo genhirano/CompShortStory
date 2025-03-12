@@ -1,6 +1,6 @@
 extern crate rocket;
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use anyhow::Context;
 
 use chrono::{ DateTime, Utc };
@@ -35,6 +35,7 @@ struct WebContext {
     gemini: Vec<String>,
     copilot: Vec<String>,
     prompt: Vec<String>,
+    deepseek: Vec<String>,
     totalcount: i64,
     offset: i64,
     has_next: bool,
@@ -55,7 +56,7 @@ fn take_value_from_json(obj: &Value, key: &str) -> Result<i64, String> {
 fn take_value_from_json_with_line(data: &Value, key: &str) -> Vec<String> {
     data[key]
         .as_str()
-        .unwrap()
+        .unwrap_or("")
         .split('\n')
         .map(|s| {
             if s.is_empty() { "　".to_string() } else { s.to_string() }
@@ -70,7 +71,7 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
 
     // APIキーをヘッダーに設定
     let mut headers = HeaderMap::new();
-    headers.insert("X-API-KEY", api_key.parse().unwrap());
+    headers.insert("X-API-KEY", api_key.parse().expect("APIキーのパースに失敗しました"));
     //.parse()メソッドは、FromStrトレイトを実装している任意の型に対して使用できます。このメソッドは、Result型を返します。
 
     // HTTPクライアントを作成
@@ -81,18 +82,18 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
     if response.is_err() {
         return Err("APIエラー".to_string());
     }
-    let response = response.unwrap();
+    let response = response.expect("APIリクエストの送信に失敗しました");
 
     // コンテンツをJsonに解釈
     let value = response.json::<serde_json::Value>().await;
     if value.is_err() {
         return Err("JSONエラー".to_string());
     }
-    let value = value.unwrap();
+    let value = value.expect("JSONのパースに失敗しました");
 
     //記事の総数と現在位置を取得
-    let totalcount = take_value_from_json(&value, "totalCount").unwrap();
-    let offset = take_value_from_json(&value, "offset").unwrap();
+    let totalcount = take_value_from_json(&value, "totalCount").unwrap_or(0);
+    let offset = take_value_from_json(&value, "offset").unwrap_or(0);
 
     //（次ボタンや前ボタンの表示制御に使用）
     let has_prev = totalcount - offset > 1;
@@ -103,23 +104,37 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
     if body_data.is_none() {
         return Err("JSONエラー".to_string());
     }
-    let value = &body_data.unwrap()["contents"][0];
+    let contents = match body_data.expect("JSONオブジェクトの取得に失敗しました").get("contents") {
+        Some(contents) => contents,
+        None => return Err("コンテンツが見つかりません".to_string()),
+    };
+    if contents.as_array().expect("コンテンツの配列取得に失敗しました").is_empty() {
+        return Err("コンテンツが見つかりません".to_string());
+    }
+    let value = &contents[0];
 
     // 記事の日付をJSTに変換（日付データはISO 8601形式のUTC（協定世界時））
-    let datetime_str = &value["date"].as_str().unwrap().to_string();
-    let datetime_utc: DateTime<Utc> = datetime_str.parse().unwrap();
+    let datetime_str = match value["date"].as_str() {
+        Some(date) => date.to_string(),
+        None => return Err("Date not found in JSON".to_string()),
+    };
+    let datetime_utc: DateTime<Utc> = match datetime_str.parse() {
+        Ok(datetime) => datetime,
+        Err(_) => return Err("Failed to parse date".to_string()),
+    };
     let datetime_jst = datetime_utc.with_timezone(&Tokyo);
     let date_str = datetime_jst.format("%Y-%m-%d").to_string();
 
     // レスポンスの内容をセット
     let context = WebContext {
-        title: value["title"].as_str().unwrap().to_string(),
+        title: value["title"].as_str().unwrap_or("").to_string(),
         version: date_str.to_string(),
         chatgpt: take_value_from_json_with_line(&value, "ChatGPT"),
         claude: take_value_from_json_with_line(&value, "Claude"),
         gemini: take_value_from_json_with_line(&value, "Gemini"),
         copilot: take_value_from_json_with_line(&value, "Copilot"),
         prompt: take_value_from_json_with_line(&value, "prompt"),
+        deepseek: take_value_from_json_with_line(&value, "deepseek"),
         totalcount: totalcount,
         offset: offset,
         has_next: has_next,
@@ -132,13 +147,13 @@ async fn getdata_from_microcms(api_key: &str, offset: i64) -> Result<WebContext,
 #[get("/")]
 async fn index(state: &State<MyState>) -> Template {
     //最新記事（offset=0）を取得
-    let context = getdata_from_microcms(state.secret.as_str(), 0);
+    let context = match getdata_from_microcms(state.secret.as_str(), 0).await {
+        Ok(context) => context,
+        Err(message) => return Template::render("error", serde_json::json!({"message":message})),
+    };
 
     //ページ遷移
-    match context.await {
-        Ok(context) => Template::render("index", &context),
-        Err(message) => Template::render("error", serde_json::json!({"message":message})),
-    }
+    Template::render("index", &context)
 }
 
 // HTTP フォームデータ
@@ -160,13 +175,13 @@ async fn post_index(arg: Form<PostData>, state: &State<MyState>) -> Template {
     let offset = current_offset + (if direction == "next" { -1 } else { 1 });
 
     //記事データ取得
-    let context = getdata_from_microcms(state.secret.as_str(), offset);
+    let context = match getdata_from_microcms(state.secret.as_str(), offset).await {
+        Ok(context) => context,
+        Err(message) => return Template::render("error", serde_json::json!({"message":message})),
+    };
 
     //ページ遷移
-    match context.await {
-        Ok(context) => Template::render("index", &context),
-        Err(message) => Template::render("error", serde_json::json!({"message":message})),
-    }
+    Template::render("index", &context)
 }
 
 #[derive(FromForm)]
@@ -189,15 +204,12 @@ async fn api(query: GetRequestParam, state: &State<MyState>) -> Json<WebContext>
         _ => 0, // "now"の場合とそれ以外
     };
 
-    let context = getdata_from_microcms(state.secret.as_str(), offset);
-    match context.await {
-        Ok(context) => {
-            return Json(context);
-        }
-        Err(message) => {
-            return create_err_json_data(message);
-        }
-    }
+    let context = match getdata_from_microcms(state.secret.as_str(), offset).await {
+        Ok(context) => context,
+        Err(message) => return create_err_json_data(message),
+    };
+
+    Json(context)
 }
 
 fn create_err_json_data(reson: String) -> Json<WebContext> {
@@ -209,6 +221,7 @@ fn create_err_json_data(reson: String) -> Json<WebContext> {
         gemini: vec!["エラー".to_string()],
         copilot: vec!["エラー".to_string()],
         prompt: vec!["エラー".to_string()],
+        deepseek: vec!["エラー".to_string()],
         totalcount: 0,
         offset: 0,
         has_next: false,

@@ -50,6 +50,7 @@
     </div>
 </div>
 
+{% if chatgpt | length > 1 %}
 <div class="column is-8 is-offset-2">
     <div class="card article">
         <div class="card-content has-text-centered has-text-black has-background-white">
@@ -68,7 +69,9 @@
         </div>
     </div>
 </div>
+{% endif %}
 
+{% if claude | length > 1 %}
 <div class="column is-8 is-offset-2">
     <div class="card article">
         <div class="card-content has-text-centered has-text-black has-background-white">
@@ -86,7 +89,9 @@
         </div>
     </div>
 </div>
+{% endif %}
 
+{% if gemini | length > 1 %}
 <div class="column is-8 is-offset-2">
     <div class="card article">
         <div class="card-content has-text-centered has-text-black has-background-white">
@@ -104,7 +109,9 @@
         </div>
     </div>
 </div>
+{% endif %}
 
+{% if copilot | length > 1 %}
 <div class="column is-8 is-offset-2">
     <div class="card article">
         <div class="card-content has-text-centered has-text-black has-background-white">
@@ -122,6 +129,27 @@
         </div>
     </div>
 </div>
+{% endif %}
+
+{% if deepseek | length > 1 %}
+<div class="column is-8 is-offset-2">
+    <div class="card article">
+        <div class="card-content has-text-centered has-text-black has-background-white">
+            <div class="say left">
+                <p class="faceicon"><img decoding="async" src="/deepseek.png"><span
+                        class="is-size-6 has-text-black">copilot</span></p>
+                <div class="chatting">
+                    <div class="sc">
+                        {% for text in deepseek %}
+                        <p class="text">{{ text }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="column is-8 is-offset-2">
     <div class="card article">
