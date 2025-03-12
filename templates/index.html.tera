@@ -137,7 +137,7 @@
         <div class="card-content has-text-centered has-text-black has-background-white">
             <div class="say left">
                 <p class="faceicon"><img decoding="async" src="/deepseek.png"><span
-                        class="is-size-6 has-text-black">copilot</span></p>
+                        class="is-size-6 has-text-black">DeepSeek</span></p>
                 <div class="chatting">
                     <div class="sc">
                         {% for text in deepseek %}
