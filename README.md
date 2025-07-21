@@ -1,36 +1,18 @@
-# AI対抗 短編小説コンテスト!
-![image](https://github.com/user-attachments/assets/f21b8d57-a673-462d-89e2-c4ffbb74bfd8)
+# 生成AI対抗 短編小説コンテスト!
 
-各AIが同じプロンプトで生成する超短編小説を読み比べできるWebアプリケーション  
 URL : [https://comp-short-story-v4p5.shuttle.app/](https://comp-short-story-v4p5.shuttle.app/)
+
+![image](https://github.com/user-attachments/assets/f21b8d57-a673-462d-89e2-c4ffbb74bfd8)
 
 ## 📖 サイト概要
 
 ### 🎯 コンセプト
-「AI対抗 短編小説コンテスト」は、複数の生成AIが全く同じプロンプト（指示文）を与えられた時に、どのような異なる短編小説を生成するかを比較検討できるユニークなWebサービスです。
+「AI対抗 短編小説コンテスト」は、５つの生成AIが、同じ短編小説執筆指示プロンプトで執筆したもの、それぞれを読み比べできるなWebアプリです。
 
 ### ✨ 主な特徴
 
-- **📅 毎日更新**: 新しいプロンプトによる小説が毎日追加されます
-- **🤖 5つのAI参戦**: Chat-GPT、Claude、Gemini、Copilot、DeepSeekが同じ土俵で競い合い
-- **📱 レスポンシブデザイン**: PCでもスマートフォンでも快適に読める設計
-- **🔄 過去作品閲覧**: 前後のボタンで過去の作品群を自由に閲覧可能
-- **🎨 読みやすいUI**: 小説の読書に集中できるシンプルで洗練されたデザイン
-
-### 🎪 使い方
-
-1. **Webサイトにアクセス**: [https://comp-short-story-v4p5.shuttle.app/](https://comp-short-story-v4p5.shuttle.app/)
-2. **今日の作品を読む**: 最新の作品が自動で表示されます
-3. **AIごとの違いを楽しむ**: 同じプロンプトに対する各AIの個性的な解釈を比較
-4. **過去作品を探索**: 「前へ」「次へ」ボタンで過去の作品を閲覧
-5. **お気に入りを発見**: 気に入った作品や面白い比較結果をチェック
-
-### 🎭 何が面白いのか？
-
-- **創造性の違い**: 同じ指示でも、AIによって全く異なるストーリー展開
-- **文体の個性**: 各AIが持つ独特の文章スタイルや表現力の違い
-- **アプローチの多様性**: シリアス、コミカル、詩的など、様々な解釈手法
-- **日々の発見**: 毎日新しいプロンプトで予想外の作品に出会える
+- **🤖 5つの生成AIが参戦**: Chat-GPT、Claude、Gemini、Copilot、DeepSeekが同じ土俵で競い合い
+- **📅 (ほぼ)毎日更新**: 新しいプロンプトによる超短編小説がほぼ毎日更新されます
 
 ## エントリー 生成AI
 * [Chat-GPT](https://chatgpt.com/) - OpenAI
@@ -38,6 +20,19 @@ URL : [https://comp-short-story-v4p5.shuttle.app/](https://comp-short-story-v4p5
 * [Gemini](https://gemini.google.com/) - Google
 * [Copilot](https://copilot.microsoft.com/) - Microsoft
 * [DeepSeek](https://chat.deepseek.com/) - DeepSeek
+
+### 🎪 使い方
+
+1. **Webサイトにアクセス**: [https://comp-short-story-v4p5.shuttle.app/](https://comp-short-story-v4p5.shuttle.app/)
+2. **今日の作品を読む**: 最新の作品が自動で表示されます
+3. **AIごとの違いを楽しむ**: 同じプロンプトに対する各AIの個性的な解釈を比較
+4. **過去作品を探索**: 「前へ」「次へ」ボタンで過去の作品を閲覧
+
+### 🎭 見どころ
+
+- **創造性の違い**: 同じ指示（プロンプト）でも、生成AIによって全く異なるストーリー展開
+- **文体の個性**: 各AIが持つ独特の文章スタイルや表現力の違い
+- **アプローチの多様性**: シリアス、コミカル、詩的など、プロンプトの様々な解釈
 
 ## イメージ
 ![image](https://github.com/genhirano/CompShortStory/assets/3538386/9684afc3-a316-41e4-a63d-30d445c465a6)
@@ -77,15 +72,15 @@ URL : [https://comp-short-story-v4p5.shuttle.app/](https://comp-short-story-v4p5
 
 ```
 ┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
-│   ユーザー        │◄──►│  Webアプリ     │◄──►│   microCMS      │
-│  (ブラウザ)       │    │   (Rocket)    │    │   (API)         │
+│   ユーザー       │◄──►│  Webアプリ   │◄──►│   microCMS      │
+│  (ブラウザ)      │    │   (Rocket)   │    │   (API)         │
 └─────────────────┘    └──────────────┘    └─────────────────┘
                               │
                               ▼
-                      ┌──────────────┐
-                      │   Shuttle     │
+                      ┌────────────────┐
+                      │   Shuttle      │
                       │  (ホスティング) │
-                      └──────────────┘
+                      └────────────────┘
 ```
 
 **データフロー**:
@@ -168,14 +163,11 @@ shuttle secrets set MICROCMS_KEY=your_microcms_api_key
 ```bash
 # 全テストの実行
 cargo test
-
-# 特定テストの実行
-cargo test test_json
 ```
 
 ### 📦 デプロイメント
 
-本アプリケーションは[Shuttle](https://shuttle.rs/)を使用してデプロイされています。
+本アプリケーションは[Shuttle](https://shuttle.rs/)を使用してデプロイ・ホスティングされています。
 
 ```bash
 # Shuttleでのデプロイ
@@ -190,14 +182,6 @@ shuttle secrets set MICROCMS_KEY=your_api_key
 - `Cargo.toml`: Rustの依存関係設定
 - `Shuttle.toml`: Shuttle固有の設定
 - `Rocket.toml`: Rocket フレームワーク設定
-
-### 🤝 開発への貢献
-
-1. フォークしてクローン
-2. フィーチャーブランチを作成
-3. 変更をコミット
-4. テストが通ることを確認
-5. プルリクエストを作成
 
 ---
 
