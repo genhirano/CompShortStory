@@ -18,7 +18,7 @@
                         {% endif %}
                     </div>
                     <div class="column is-one-half has-text-white">
-                        <p>毎日更新！</p>
+                        <p>ほぼ毎日更新！</p>
                         <button type="button" id="loading" style="display:none;"
                             class="button is-loading is-large"></button>
                     </div>
